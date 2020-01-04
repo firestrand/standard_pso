@@ -25,27 +25,24 @@ static ulong kiss_k;
 static ulong kiss_m;
 
 
-
-void seed_rand_kiss(ulong seed) 
-{
-	kiss_x = seed | 1;
-	kiss_y = seed | 2;
-	kiss_z = seed | 4;
-	kiss_w = seed | 8;
-	kiss_carry = 0;
+void seed_rand_kiss(ulong seed) {
+    kiss_x = seed | 1UL;
+    kiss_y = seed | 2UL;
+    kiss_z = seed | 4UL;
+    kiss_w = seed | 8UL;
+    kiss_carry = 0;
 }
 
-ulong rand_kiss() 
-{
-	kiss_x = kiss_x * 69069 + 1;
-	kiss_y ^= kiss_y << 13;
-	kiss_y ^= kiss_y >> 17;
-	kiss_y ^= kiss_y << 5;
-	kiss_k = (kiss_z >> 2) + (kiss_w >> 3) + (kiss_carry >> 2);
-	kiss_m = kiss_w + kiss_w + kiss_z + kiss_carry;
-	kiss_z = kiss_w;
-	kiss_w = kiss_m;
-	kiss_carry = kiss_k >> 30;
-	//printf("\n%f ",(double) (kiss_x + kiss_y + kiss_w));
-	return kiss_x + kiss_y + kiss_w;
+ulong rand_kiss() {
+    kiss_x = kiss_x * 69069 + 1;
+    kiss_y ^= kiss_y << 13UL;
+    kiss_y ^= kiss_y >> 17UL;
+    kiss_y ^= kiss_y << 5UL;
+    kiss_k = (kiss_z >> 2UL) + (kiss_w >> 3UL) + (kiss_carry >> 2UL);
+    kiss_m = kiss_w + kiss_w + kiss_z + kiss_carry;
+    kiss_z = kiss_w;
+    kiss_w = kiss_m;
+    kiss_carry = kiss_k >> 30UL;
+    //printf("\n%f ",(double) (kiss_x + kiss_y + kiss_w));
+    return kiss_x + kiss_y + kiss_w;
 }
