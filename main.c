@@ -48,8 +48,8 @@ int main() {
     float z;
     double zz;
 
-    E = exp((long double) 1);
-    pi = acos((long double) -1);
+    E = exp(1.0);
+    pi = acos(-1.0);
     errMax = 0;
     nbRand = 0;
 
@@ -75,7 +75,7 @@ int main() {
     //  3 => when P=G, just look around
     // 4 =>  different weights for X, P, G  (TEST)
 
-    param.BW[2] = 5;    // Randomness options
+    param.BW[2] = 6;    // Randomness options
     // -2nn => Truncated KISS (simulated).
     //			nn is the number of bits you use to define
     //			each random number/ Example: -207 for 7 bits
@@ -93,6 +93,7 @@ int main() {
     //			each random number/ Example: 307 for 7 bits
     //      Warning: nn must be >=2
     // 4 => Read on a list (f_rand_quasi.txt)
+    // 5 => quasi-random Rd and wyRand random numbers
     // 5 => wyRand random numbers
     f_rand_bin = fopen("f_rand_bin.txt", "r"); // A sequence of bits, if BW[2]=3
     f_rand = fopen("Ltest.txt", "r"); //A list of real numbers in ]0,1], if BW[2]=4
@@ -128,8 +129,8 @@ int main() {
     // Default: 3
 
     // Confidence coefficients. Default:
-    param.w = 1. / (2 * log((double) 2)); // 0.721
-    param.c = 0.5 + log((double) 2); // 1.193
+    param.w = 1. / (2. * log((double) 2.)); // 0.721
+    param.c = 0.5 + log((double) 2.); // 1.193
     param.topology = 0; // 0 => information links as in SPSO 2007 (quasi-random)
     // 1 => variable random ring (EXPERIMENTAL)
 
@@ -153,9 +154,9 @@ int main() {
             break;
     }
     // ----------------------------------------------- PROBLEM
-    param.trace = 0; // If >0 more information is displayed/saved (f_trace.txt)
+    param.trace = 1; // If >0 more information is displayed/saved (f_trace.txt)
     // Functions to optimise
-    nbFunc = 1; // Number of functions
+    nbFunc = 13; // Number of functions
     func[0] = 4; // 4
     func[1] = 11;  // 11
     func[2] = 15;  // 15
@@ -275,7 +276,8 @@ int main() {
                 nCycle = 0;
                 break;
 
-            case 5: // wyRand
+            case 5:// wyRand w/ Rd quasi-random initialization
+            case 6:// wyRand
                 wysrand(1294404794);
                 break;
         }
@@ -298,6 +300,7 @@ int main() {
             case 3:
             case 4:
             case 5:
+            case 6:
                 break;
         }
 //nCycle=4; 
@@ -307,7 +310,7 @@ int main() {
                 param.S = (int) (0.5 *
                                  (0.5 + alea(Smean - D / 2, Smean + D / 2, 0) + alea(Smean - D / 2, Smean + D / 2, 0)));
 
-            param.p = 1 - pow(1 - 1. / param.S, param.K);
+            param.p = 1. - pow(1. - 1. / param.S, param.K);
 //printf("\n p %f",param.p);      
             // (for a "global best" PSO, directly set param.p=1)
 
@@ -326,8 +329,7 @@ int main() {
             }
 
             // Memorize the best (useful if more than one run)
-            if (run == 0) bestBest = result.SW.P[result.SW.best];
-            else if (error < bestBest.f) bestBest = result.SW.P[result.SW.best];
+            if (run == 0 || error < bestBest.f) bestBest = result.SW.P[result.SW.best];
 
             // Result display
             errorMean = errorMean + error;

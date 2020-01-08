@@ -68,6 +68,7 @@ struct result PSO(struct param param, struct problem pb) {
 
         case 1:
         case 2:
+        case 5:
             qRand = quasiRand(pb.SS.D, R.SW.S, randCase);
 
             for (s = 0; s < R.SW.S; s++) {

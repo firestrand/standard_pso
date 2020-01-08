@@ -36,8 +36,94 @@ struct problem problemDef(int functionCode) {
             pb.objective = 0;
 
             break;
-            // Cases 100 etc.
-#include "cec2005pb.c"
+
+        case 100: // CEC 2005 F1
+            pb.SS.D = 30;
+            for (d = 0; d < pb.SS.D; d++) {
+                pb.SS.min[d] = -100;
+                pb.SS.max[d] = 100;
+                pb.SS.q.q[d] = 0;
+
+            }
+            pb.evalMax = pb.SS.D * 10000;
+            pb.epsilon = 0.000001;    //Acceptable error
+            pb.objective = -450;       // Objective value
+            break;
+
+        case 102:        // Rosenbrock. CEC 2005 F6
+            pb.SS.D = 10;    // 10
+
+            // Boundaries
+            for (d = 0; d < pb.SS.D; d++) {
+                pb.SS.min[d] = -100;
+                pb.SS.max[d] = 100;
+                pb.SS.q.q[d] = 0;
+
+            }
+
+            pb.evalMax = pb.SS.D * 10000;
+            pb.epsilon = 0.01; // Acceptable error
+            pb.objective = 390;
+
+            break;
+
+        case 103:// CEC 2005 F9, Rastrigin
+            pb.SS.D = 30;
+            for (d = 0; d < pb.SS.D; d++) {
+                pb.SS.min[d] = -5.12;
+                pb.SS.max[d] = 5.12;
+                pb.SS.q.q[d] = 0;
+
+            }
+            pb.epsilon = 0.01; // Acceptable error
+            pb.objective = -330;       // Objective value
+            pb.evalMax = pb.SS.D * 10000;
+
+            break;
+
+        case 104:// CEC 2005 F2  Schwefel
+        case 107: // F4 Schwefel + noise
+            pb.SS.D = 10;
+            for (d = 0; d < pb.SS.D; d++) {
+                pb.SS.min[d] = -100;
+                pb.SS.max[d] = 100;
+                pb.SS.q.q[d] = 0;
+
+            }
+            pb.epsilon = 0.00001;    //0.00001 Acceptable error
+            pb.objective = -450;       // Objective value
+            pb.evalMax = pb.SS.D * 10000;
+
+            break;
+
+
+        case 105:// CEC 2005 F7  Griewank (NON rotated)
+            pb.SS.D = 10;     // 10
+            for (d = 0; d < pb.SS.D; d++) {
+                pb.SS.min[d] = -600;
+                pb.SS.max[d] = 600;
+                pb.SS.q.q[d] = 0;
+
+            }
+            pb.epsilon = 0.01;    //0.01 Acceptable error
+            pb.objective = -180;       // Objective value
+            pb.evalMax = pb.SS.D * 10000;
+
+            break;
+
+
+        case 106:// CEC 2005 F8 Ackley (NON rotated)
+            pb.SS.D = 10; // 10;
+            for (d = 0; d < pb.SS.D; d++) {
+                pb.SS.min[d] = -32;
+                pb.SS.max[d] = 32;
+                pb.SS.q.q[d] = 0;
+            }
+            pb.epsilon = 0.0001;    //.0001 Acceptable error
+            pb.objective = -140;       // Objective value
+            pb.evalMax = pb.SS.D * 10000;
+
+            break;
 
         case 1:        // Griewank
             pb.SS.D = 30; //30;
@@ -375,7 +461,7 @@ struct problem problemDef(int functionCode) {
 
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = 0;
-                pb.SS.max[d] = 100; // Warning: hard coded in cellular_phone.c
+                pb.SS.max[d] = 100; // Warning: hard coded in perf.c
                 pb.SS.q.q[d] = 0;
             }
 
@@ -406,7 +492,7 @@ struct problem problemDef(int functionCode) {
 
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = 0;
-                pb.SS.max[d] = 100; // Warning: hard coded in repulsion.c
+                pb.SS.max[d] = 100; // Warning: hard coded in perf.c
                 pb.SS.q.q[d] = 0;
             }
 
@@ -414,15 +500,38 @@ struct problem problemDef(int functionCode) {
             pb.epsilon = 0;
             pb.objective = 0;
             break;
-// case 25:
-#include "pressure_vessel.c"
+
+        case 25: //  Pressure vessel (penalty method)
+            pb.SS.D = 4;
+
+            pb.SS.min[0] = 1.125;
+            pb.SS.max[0] = 12.5;
+            pb.SS.q.q[0] = 0.0625;
+
+            pb.SS.min[1] = 0.625;
+            pb.SS.max[1] = 12.5;
+            pb.SS.q.q[1] = 0.0625;
+
+            pb.SS.min[2] = 0;
+            pb.SS.max[2] = 240;
+            pb.SS.q.q[2] = 0;
+            pb.SS.min[3] = 0;
+            pb.SS.max[3] = 240;
+            pb.SS.q.q[3] = 0;
+
+            pb.objective = 7197.72893;
+            pb.SS.quantisation = 1;
+            pb.SS.normalise = 1;     // Very important here.
+            pb.evalMax = 50000;
+            pb.epsilon = 0; // 0.00001;
+            break;
 
         case 26: // Ellipsoidal
             pb.SS.D = 30;
 
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -30;
-                pb.SS.max[d] = 30; // Warning: hard coded in repulsion.c
+                pb.SS.max[d] = 30; // Warning: hard coded in perf.c
                 pb.SS.q.q[d] = 0;
             }
 

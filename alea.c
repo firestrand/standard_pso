@@ -1,5 +1,6 @@
 
 #include "wyhash.h"
+#include "rd.h"
 #include <limits.h>
 
 double alea(double a, double b, int option) {                // random number (uniform distribution) in  [a b]
@@ -261,7 +262,7 @@ struct vector alea_sphere(int D, double radius, int distrib, double mean,
         if (option != 4)
             x.v[j] = alea_normal(0, 1, option);// Gaussian (Box-Muller method)
         else // When the "random" numbers are read on a file, the BM method
-            // may loop infinitly
+            // may loop infinitely
             x.v[j] = alea_stable(2, 0, 1, 0, option); // Gaussian (CMS method)
         length = length + x.v[j] * x.v[j];
     }
@@ -326,6 +327,8 @@ struct vectorList quasiRand(int D, int nRand, int option) {
     struct vectorList qRand;
 
     switch (option) {
+        case 5: //Wesl / Plastic / Rd Sequence
+            return quasiRd(D, nRand, alea(0, 1, option));
         case 1: // Sobol
             if (D > 40) {
                 printf("\nThe embedded Sobol sequences generator can not be used for dimensions greater than 40");

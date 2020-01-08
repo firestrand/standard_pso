@@ -1,3 +1,5 @@
+#ifndef spso2011
+#define spso2011
 #include "stdio.h"
 #include "math.h"
 #include <stdlib.h>
@@ -12,7 +14,6 @@
 #define infinity 1.e+100
 // For the RNG KISS
 # define ulong unsigned long // To generate pseudo-random numbers with KISS
-# define RAND_MAX_KISS 4294967295UL //  Needs ISO C90
 
 // For the RNG Mersenne 64 bits
 #define NN 312
@@ -140,6 +141,8 @@ void seed_rand_kiss(ulong seed);
 
 // In lennard_jones.c (included in perf.c)
 double lennard_jones(struct position x);
+// In coil_compession_spring.c (included in perf.c)
+double coil_compression_spring(struct position xs);
 
 // In mersenne.c
 void init_genrand64(unsigned long long seed);
@@ -164,7 +167,6 @@ double perf(struct position x, int function, struct SS SS, double objective);
 
 // In problemDef.c
 struct problem problemDef(int functionCode);
-// See also cec2005.c, cec2005data.c, cec2005pb.c
 
 // In PSO.c
 struct result PSO(struct param param, struct problem problem);
@@ -195,7 +197,7 @@ int nBit;            // Length of the bit string that is used for each random nu
 int nCycleMax; //=infinity;		// Length of the cycle, when reading the random numbers on a file
 // (BW[2]=3 or 4) Default: infinity
 int nCycle;
-long double pi; // Useful for some test functions
+double pi; // Useful for some test functions
 double rMax;
 double randNumber[randNbMax];
 int randRank;
@@ -214,3 +216,4 @@ FILE *f_synth;
 FILE *f_rand;
 FILE *f_rand_bin;
 FILE *f_trace;
+#endif
