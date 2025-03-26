@@ -21,6 +21,8 @@
 *.a
 *.la
 *.lo
+*.def
+*.exp
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -42,6 +44,43 @@
 *.idb
 *.pdb
 
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build directories
+build/
+debug/
+release/
+bin/
+obj/
+out/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Log files
+*.log
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
@@ -50,3 +89,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# CMake specific
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
