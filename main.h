@@ -4,6 +4,7 @@
 #include "math.h"
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 #define    DMax 42    // Max number of dimensions of the search space
 #define fMax 6                // Max number of constraints +1

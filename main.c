@@ -13,9 +13,72 @@ Maurice.Clerc@WriteMe.com
 
 #include "main.h"
 #include "wyhash.h"
+#include <sys/stat.h>
+#include <errno.h>
+#include <unistd.h>
+
+// Global variables defined in main.h
+long double E;
+double errMax = 0, errMin = 0;
+double nbRand = 0;
+int nBit = 0;
+int nCycleMax = 0;
+int nCycle = 0;
+double pi;
+double rMax = 0;
+double randNumber[randNbMax];
+int randRank = 0;
+double randChaos = 0;
+
+// For Network problem
+int bcsNb = 0;
+int btsNb = 0;
+
+// For Repulsion problem
+int Dim = 0;
+
+// Files
+FILE *f_run = NULL;
+FILE *f_synth = NULL;
+FILE *f_rand = NULL;
+FILE *f_rand_bin = NULL;
+FILE *f_trace = NULL;
+
+// Function to create a directory if it doesn't exist
+int create_directory(const char *path) {
+    struct stat st = {0};
+    if (stat(path, &st) == -1) {
+        #ifdef _WIN32
+        return mkdir(path);
+        #else
+        return mkdir(path, 0755);
+        #endif
+    }
+    return 0;
+}
+
+// Function to get integer argument
+int getIntArg(char* argv[], int* i, int argc, const char* flag) {
+    if (*i + 1 >= argc) {
+        fprintf(stderr, "Missing integer argument for %s\n", flag);
+        exit(EXIT_FAILURE);
+    }
+    (*i)++;
+    return atoi(argv[*i]);
+}
+
+// Function to get double argument
+double getDoubleArg(char* argv[], int* i, int argc, const char* flag) {
+    if (*i + 1 >= argc) {
+        fprintf(stderr, "Missing double argument for %s\n", flag);
+        exit(EXIT_FAILURE);
+    }
+    (*i)++;
+    return atof(argv[*i]);
+}
 
 // =================================================
-int main() {
+int main(int argc, char** argv) {
     struct position bestBest; // Best position over all runs
     int d;            // Current dimension
     double D;
@@ -28,19 +91,22 @@ int main() {
     int func[funcMax]; // List of functions (codes) to optimise
     int indFunc;
 
-    int nbFunc;
     int nFailure;        // Number of unsuccessful runs
     double logProgressMean;
     struct param param;
     struct problem pb;
     int randCase;
-    int run, runMax;
+    int run;
     struct result result;
 
     time_t seconds;
+    char results_dir[256];
+    char func_dir[256];
+    char file_path[512];
+    char base_dir[256];
+    FILE *f_summary = NULL;
 
     int scanNb;
-    double Smean;
     double success[funcMax];
     double successRate;
     int t;
@@ -48,16 +114,60 @@ int main() {
     float z;
     double zz;
 
+
+    int runMax = 1;
+    double Smean = 40;
+    int nbFunc = 1;
+    int seed = 1294404794; // Default seed
+    const int MAX_FUNC = 13;
+
+    // Parse command line arguments
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "-R") == 0) {
+            runMax = getIntArg(argv, &i, argc, "-R");
+        } else if (strcmp(argv[i], "-S") == 0) {
+            Smean = getDoubleArg(argv, &i, argc, "-S");
+        } else if (strcmp(argv[i], "-f") == 0) {
+            nbFunc = getIntArg(argv, &i, argc, "-f");
+            if (nbFunc > MAX_FUNC) {
+                fprintf(stderr, "Exceeded maximum number of functions.\n");
+                exit(EXIT_FAILURE);
+            }
+        } else if (strcmp(argv[i], "-sd") == 0) {
+            seed = getIntArg(argv, &i, argc, "-sd");
+        } else {
+            fprintf(stderr, "Unknown argument: %s\n", argv[i]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Initialize global constants
     E = exp(1.0);
     pi = acos(-1.0);
     errMax = 0;
     nbRand = 0;
 
-    // Files
-    f_run = fopen("f_run.txt", "w");
-    f_synth = fopen("f_synth.txt", "w");
-    f_trace = fopen("f_trace.txt", "w"); // For information
+    // Get current working directory
+    char cwd[256];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        printf("\nWARNING: Could not get current working directory");
+        strcpy(cwd, ".");
+    }
+    
+    // Set base directory for results
+    sprintf(base_dir, "%s/../results", cwd);
+    
+    // Create main results directory
+    printf("\nCreating results directory: '%s'", base_dir);
+    if (create_directory(base_dir) != 0) {
+        printf("\nWARNING: Could not create directory '%s': %s", base_dir, strerror(errno));
+    }
 
+    // Close any open files from previous runs
+    if (f_run) { fclose(f_run); f_run = NULL; }
+    if (f_synth) { fclose(f_synth); f_synth = NULL; }
+    if (f_trace) { fclose(f_trace); f_trace = NULL; }
+    if (f_summary) { fclose(f_summary); f_summary = NULL; }
 
     //------------------------------------------------ PARAMETERS
     // Bells and Whistles
@@ -121,7 +231,9 @@ int main() {
     // WARNING: the CMS method may not work with randomness option >=2
     if (param.BW[2] >= 2) param.distrib = 0;
 
-    Smean = 40; //Swarm size or Mean swarm size (if BW[0]=1). Suggested: 40
+    if (argc < 2) {
+        Smean = 40; //Swarm size or Mean swarm size (if BW[0]=1). Suggested: 40
+    }
 
     param.K = 3;    // Parameter to compute the probability p for a particle to be an
     // external informant. You may also directly define p (see below),
@@ -155,21 +267,23 @@ int main() {
     }
     // ----------------------------------------------- PROBLEM
     param.trace = 1; // If >0 more information is displayed/saved (f_trace.txt)
+    
     // Functions to optimise
-    nbFunc = 13; // Number of functions
-    func[0] = 4; // 4
-    func[1] = 11;  // 11
-    func[2] = 15;  // 15
-    func[3] = 17;  // 17
-    func[4] = 18; // 18
-    func[5] = 20;
-    func[6] = 21;
-    func[7] = 100;
-    func[8] = 102;
-    func[9] = 103;
-    func[10] = 104;
-    func[11] = 105;
-    func[12] = 106;
+    if (argc < 2) {
+        func[0] = 4; // 4
+        func[1] = 11;  // 11
+        func[2] = 15;  // 15
+        func[3] = 17;  // 17
+        func[4] = 18; // 18
+        func[5] = 20;
+        func[6] = 21;
+        func[7] = 100;
+        func[8] = 102;
+        func[9] = 103;
+        func[10] = 104;
+        func[11] = 105;
+        func[12] = 106;
+    }
 
     /* (see problemDef( ) for precise definitions)
         -1  Constant. For test of biases
@@ -217,8 +331,7 @@ int main() {
  
 
 */
-
-    runMax = 100; // Numbers of runs
+    
     if (runMax > R_max) {
         runMax = R_max;
         printf("\nWARNING. I can perform only %i runs. See R_max in main.h", R_max);
@@ -228,8 +341,52 @@ int main() {
     {
         functionCode = func[indFunc];
 
+        // Create function-specific directory
+        sprintf(func_dir, "%s/f%d", base_dir, functionCode);
+        printf("\nCreating function directory: '%s'", func_dir);
+        if (create_directory(func_dir) != 0) {
+            printf("\nWARNING: Could not create directory %s: %s", func_dir, strerror(errno));
+        }
+
+        // Close any previously open files
+        if (f_run) { fclose(f_run); f_run = NULL; }
+        if (f_synth) { fclose(f_synth); f_synth = NULL; }
+        if (f_trace) { fclose(f_trace); f_trace = NULL; }
+        if (f_summary) { fclose(f_summary); f_summary = NULL; }
+
+        // Create function-specific output files
+        sprintf(file_path, "%s/f_run_seed%d.txt", func_dir, seed);
+        printf("\nOpening run file: '%s'", file_path);
+        f_run = fopen(file_path, "w");
+        if (!f_run) {
+            printf("\nWARNING: Could not create file %s: %s", file_path, strerror(errno));
+        }
+        
+        sprintf(file_path, "%s/f_synth_seed%d.txt", func_dir, seed);
+        printf("\nOpening synth file: '%s'", file_path);
+        f_synth = fopen(file_path, "w");
+        if (!f_synth) {
+            printf("\nWARNING: Could not create file %s: %s", file_path, strerror(errno));
+        }
+        
+        sprintf(file_path, "%s/f_trace_seed%d.txt", func_dir, seed);
+        printf("\nOpening trace file: '%s'", file_path);
+        f_trace = fopen(file_path, "w");
+        if (!f_trace) {
+            printf("\nWARNING: Could not create file %s: %s", file_path, strerror(errno));
+        }
+        
+        // Create summary file for all console output
+        sprintf(file_path, "%s/summary_seed%d.txt", func_dir, seed);
+        printf("\nOpening summary file: '%s'", file_path);
+        f_summary = fopen(file_path, "w");
+        if (!f_summary) {
+            printf("\nWARNING: Could not create file %s: %s", file_path, strerror(errno));
+        }
+
         // Some information
         printf("\n Function %i ", functionCode);
+        if (f_summary) fprintf(f_summary, "\n Function %i ", functionCode);
 
         // Define the problem
         pb = problemDef(functionCode);
@@ -239,6 +396,7 @@ int main() {
         errorMean = 0;
         evalMean = 0;
         nFailure = 0;
+        logProgressMean = 0; // Initialize logProgressMean
         D = pb.SS.D;
         randCase = param.BW[2];
         if (randCase > 300) {
@@ -255,12 +413,11 @@ int main() {
                 break;
 
             case 0:
-                seed_rand_kiss(1294404794); // Initialise the RNG KISS for reproducible results
+                seed_rand_kiss(seed); // Initialise the RNG KISS for reproducible results
                 break;
 
             case 10: // Mersenne 64 bits
-                init_genrand64(1294404794);
-                //init_genrand64(1234567890);
+                init_genrand64(seed);
                 break;
 
             case -2: // Truncated KISS (simulated)
@@ -278,7 +435,7 @@ int main() {
 
             case 5:// wyRand w/ Rd quasi-random initialization
             case 6:// wyRand
-                wysrand(1294404794);
+                wysrand(seed);
                 break;
         }
 
@@ -315,6 +472,8 @@ int main() {
             // (for a "global best" PSO, directly set param.p=1)
 
             printf("\n Swarm size %i", param.S);
+            if (f_summary) fprintf(f_summary, "\n Swarm size %i", param.S);
+            
             result = PSO(param, pb);
             error = result.error;
 
@@ -328,8 +487,14 @@ int main() {
                                            / pb.SS.normalise;
             }
 
+            // Initialize bestBest on first run
+            if (run == 0) {
+                bestBest = result.SW.P[result.SW.best];
+            }
             // Memorize the best (useful if more than one run)
-            if (run == 0 || error < bestBest.f) bestBest = result.SW.P[result.SW.best];
+            else if (error < bestBest.f) {
+                bestBest = result.SW.P[result.SW.best];
+            }
 
             // Result display
             errorMean = errorMean + error;
@@ -338,13 +503,24 @@ int main() {
             zz = 100 * (1 - (double) nFailure / (run + 1));
             printf("  Success  %.2f%%", zz);
 
+            // Write the same info to the summary file
+            if (f_summary) {
+                fprintf(f_summary, "\nRun %i. S %i,  Eval %f. Error %e ", run + 1, param.S, result.nEval, error);
+                fprintf(f_summary, " Mean %e", errorMean / (run + 1));
+                fprintf(f_summary, "  Success  %.2f%%", zz);
+            }
+
             // Best position display
             //for (d=0;d<pb.SS.D;d++) printf(" %f",result.SW.P[result.SW.best].x[d]);
 
-            // Save result
-            fprintf(f_run, "\n%i %.1f %.0f %e %e ", run + 1, zz, result.nEval, error, errorMean / (run + 1));
-            // Save best position
-            for (d = 0; d < pb.SS.D; d++) fprintf(f_run, " %f", result.SW.P[result.SW.best].x[d]);
+            // Save result to f_run
+            if (f_run) {
+                fprintf(f_run, "\n%i %.1f %.0f %e %e ", run + 1, zz, result.nEval, error, errorMean / (run + 1));
+                // Save best position
+                for (d = 0; d < pb.SS.D; d++) fprintf(f_run, " %f", result.SW.P[result.SW.best].x[d]);
+            } else {
+                printf("\nWARNING: Could not write to run file (NULL pointer)");
+            }
 
             // Compute/save some statistical information
             if (run == 0)
@@ -354,7 +530,11 @@ int main() {
 
             evalMean = evalMean + result.nEval;
             errorMeanBest[run] = error;
-            logProgressMean = logProgressMean - log(error);
+            
+            // Safely handle log calculation for error values
+            if (error > 0) {
+                logProgressMean = logProgressMean - log(error);
+            }
         }        // End loop on "run"
 
         // ---------------------END
@@ -366,6 +546,10 @@ int main() {
 
         printf("\n Eval. (mean)= %f", evalMean);
         printf("\n Error (mean) = %e", errorMean);
+        if (f_summary) {
+            fprintf(f_summary, "\n Eval. (mean)= %f", evalMean);
+            fprintf(f_summary, "\n Error (mean) = %e", errorMean);
+        }
 
         // Variance
         variance = 0;
@@ -376,31 +560,105 @@ int main() {
         variance = sqrt(variance / runMax);
         printf("\n Std. dev. %e", variance);
         printf("\n Log_progress (mean) = %f", logProgressMean);
+        if (f_summary) {
+            fprintf(f_summary, "\n Std. dev. %e", variance);
+            fprintf(f_summary, "\n Log_progress (mean) = %f", logProgressMean);
+        }
 
         // Success rate and minimum value
         printf("\n Failure(s) %i  ", nFailure);
+        if (f_summary) fprintf(f_summary, "\n Failure(s) %i  ", nFailure);
 
         successRate = 100 * (1 - nFailure / (double) runMax);
         printf("Success rate = %.2f%%", successRate);
+        if (f_summary) fprintf(f_summary, "Success rate = %.2f%%", successRate);
+        
         success[indFunc] = successRate;
 
         printf("\n Best min value = %1.20e", errorMin);
         printf("\nPosition of the optimum: ");
         for (d = 0; d < pb.SS.D; d++) printf(" %.20f", bestBest.x[d]);
+        
+        if (f_summary) {
+            fprintf(f_summary, "\n Best min value = %1.20e", errorMin);
+            fprintf(f_summary, "\nPosition of the optimum: ");
+            for (d = 0; d < pb.SS.D; d++) fprintf(f_summary, " %.20f", bestBest.x[d]);
+        }
 
+        // Save to f_synth file
+        if (f_synth) {
+            fprintf(f_synth, "%i %i %.0f %e %e %f %f", functionCode, pb.SS.D, successRate,
+                    errorMean, variance, evalMean, bestBest.f);
+            for (d = 0; d < pb.SS.D; d++) fprintf(f_synth, " %1.20e", bestBest.x[d]);
+            fprintf(f_synth, "\n");
 
-        // Save
-        fprintf(f_synth, "%i %i %.0f %e %e %f %f", functionCode, pb.SS.D, successRate,
-                errorMean, variance, evalMean, bestBest.f);
-        for (d = 0; d < pb.SS.D; d++) fprintf(f_synth, " %1.20e", bestBest.x[d]);
-        fprintf(f_synth, "\n");
-
-// Specific save for Repulsive problem
-        if (pb.function == 24) {
-            for (d = 0; d < pb.SS.D - 1; d = d + 2) {
-                fprintf(f_synth, " %1.20e %1.20e", bestBest.x[d], bestBest.x[d + 1]);
-                fprintf(f_synth, "\n");
+            // Specific save for Repulsive problem
+            if (pb.function == 24) {
+                for (d = 0; d < pb.SS.D - 1; d = d + 2) {
+                    fprintf(f_synth, " %1.20e %1.20e", bestBest.x[d], bestBest.x[d + 1]);
+                    fprintf(f_synth, "\n");
+                }
             }
+        } else {
+            printf("\nWARNING: Could not write to synth file (NULL pointer)");
+        }
+
+        // Repeat informations in summary file
+        if (f_summary) {
+            fprintf(f_summary, "\n---------");
+            fprintf(f_summary, "\n Function: %i", functionCode);
+            fprintf(f_summary, "\n Confinement: %s", param.confin == 0 ? "YES" : "NO");
+            fprintf(f_summary, "\n Distribution: ");
+            switch (param.distrib) {
+                case 0:
+                    fprintf(f_summary, " uniform");
+                    break;
+                case 1:
+                    fprintf(f_summary, " Gaussian (%f,%f), Box-Muller", param.mean, param.sigma);
+                    break;
+                case 2:
+                    fprintf(f_summary, " Gaussian (%f,%f), CMS", param.mean, param.sigma);
+                    break;
+                case 3:
+                    fprintf(f_summary, " Stable (%f,%f)", param.mean, param.sigma);
+                    break;
+                case 4:
+                    fprintf(f_summary, " Slash (%f,%f)", param.mean, param.sigma);
+                    break;
+            }
+
+            fprintf(f_summary, "\n BW = (%i, %i, %i, %i)", param.BW[0], param.BW[1],
+                param.BW[2], param.BW[3]);
+            fprintf(f_summary, "\n Swarm size: ");
+            if (param.BW[0] == 0) 
+                fprintf(f_summary, "%i", (int) Smean); 
+            else 
+                fprintf(f_summary, " mean %i", (int) Smean);
+            fprintf(f_summary, "\n K = %i", param.K);
+            fprintf(f_summary, "\n w = %f", param.w);
+            fprintf(f_summary, "\n c = %f", param.c);
+            fprintf(f_summary, "\n %e random numbers have been used", nbRand);
+        } else {
+            printf("\nWARNING: Could not write to summary file (NULL pointer)");
+        }
+
+        // Close all files for this function
+        printf("\nClosing output files for function %d", functionCode);
+        if (f_run) {
+            fclose(f_run);
+            f_run = NULL;
+        }
+        if (f_synth) {
+            fclose(f_synth);
+            f_synth = NULL;
+        }
+        if (f_trace) {
+            fclose(f_trace);
+            f_trace = NULL;
+        }
+        if (f_summary) {
+            fclose(f_summary);
+            f_summary = NULL;
         }
 
     } // End "for ind[..."
@@ -444,7 +702,11 @@ int main() {
     printf("\n w = %f", param.w);
     printf("\n c = %f", param.c);
     printf("\n %e random numbers have been used", nbRand);
-    fprintf(f_run, "\nnbRand %e", nbRand);
+
+    // Close common files
+    if (f_rand_bin) fclose(f_rand_bin);
+    if (f_rand) fclose(f_rand);
+
     return 0; // End of main program
 }
 // ===============================================================

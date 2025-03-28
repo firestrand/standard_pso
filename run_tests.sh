@@ -1,17 +1,27 @@
 #!/bin/bash
 
-# Create results directory
-mkdir -p results
+# Get the absolute path of this script's directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Create base results directory
+mkdir -p "$SCRIPT_DIR/results"
 
 # Function to run a test
 run_test() {
     local func=$1
     local runs=$2
     local seed=$3
-    local output_file="results/function_${func}_${runs}runs_seed${seed}.txt"
+    local func_dir="$SCRIPT_DIR/results/f${func}"
+    
+    # Create function directory if it doesn't exist
+    mkdir -p "$func_dir"
+    
     echo "Running function $func with $runs runs and seed $seed..."
-    ./build/standard_pso -R $runs -S 40 -f $func -sd $seed > $output_file
-    echo "Results saved to $output_file"
+    
+    # Run the PSO program with appropriate arguments
+    "$SCRIPT_DIR/build/standard_pso" -R $runs -S 40 -f $func -sd $seed
+    
+    echo "Results saved to $func_dir"
 }
 
 # Run all test functions with 100 runs and different seeds

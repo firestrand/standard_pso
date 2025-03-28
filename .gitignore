@@ -61,6 +61,7 @@ out/
 cmake-build-*/
 CMakeFiles/
 CMakeCache.txt
+results/
 
 # OS specific files
 .DS_Store
@@ -98,3 +99,4 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+tests/unity/
