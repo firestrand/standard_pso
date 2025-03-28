@@ -586,6 +586,51 @@ double perf(struct position x, int function, struct SS SS,
 
             break;
 
+        case 103:// CEC 2005 F9, Rastrigin
+            f = -330;  // Initialize with objective value
+            for (d = 0; d < xs.size; d++) {
+                xd = xs.x[d] - offset_3[d];  // Apply shift vector
+                f = f + (xd * xd - 10 * cos(2 * pi * xd) + 10);
+            }
+            break;
+
+        case 104:// CEC 2005 F2  Schwefel
+            f = -450;  // Initialize with objective value
+            for (d = 0; d < xs.size; d++) {
+                xd = xs.x[d] - offset_4[d];  // Apply shift vector
+                sum1 = 0;
+                for (k = 0; k <= d; k++) {
+                    sum1 += xd;
+                }
+                f = f + sum1 * sum1;
+            }
+            break;
+
+        case 105:// CEC 2005 F7  Griewank (NON rotated)
+            f = -180;  // Initialize with objective value
+            sum1 = 0;
+            p = 1;
+            for (d = 0; d < xs.size; d++) {
+                xd = xs.x[d] - offset_5[d];  // Apply shift vector
+                sum1 = sum1 + (xd * xd / 4000.0);
+                p = p * cos(xd / sqrt((double)(d + 1)));
+            }
+            f = f + sum1 - p + 1;
+            break;
+
+        case 106:// CEC 2005 F8 Ackley (NON rotated)
+            f = -140;  // Initialize with objective value
+            sum1 = 0;
+            sum2 = 0;
+            for (d = 0; d < xs.size; d++) {
+                xd = xs.x[d] - offset_6[d];  // Apply shift vector
+                sum1 += xd * xd;
+                sum2 += cos(2 * pi * xd);
+            }
+            f = f - 20 * exp(-0.2 * sqrt(sum1/xs.size)) 
+                  - exp(sum2/xs.size) + 20 + E;
+            break;
+
     }
 //------------------
     f = fabs(f - objective);

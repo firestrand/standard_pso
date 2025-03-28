@@ -1,4 +1,3 @@
-
 //===================================================
 struct problem problemDef(int functionCode) {
     int d;
@@ -83,37 +82,31 @@ struct problem problemDef(int functionCode) {
 
         case 104:// CEC 2005 F2  Schwefel
         case 107: // F4 Schwefel + noise
-            pb.SS.D = 10;
+            pb.SS.D = 30;  // Changed from 10 to 30
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -100;
                 pb.SS.max[d] = 100;
                 pb.SS.q.q[d] = 0;
-
             }
             pb.epsilon = 0.00001;    //0.00001 Acceptable error
             pb.objective = -450;       // Objective value
             pb.evalMax = pb.SS.D * 10000;
-
             break;
 
-
         case 105:// CEC 2005 F7  Griewank (NON rotated)
-            pb.SS.D = 10;     // 10
+            pb.SS.D = 30;     // Changed from 10 to 30
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -600;
                 pb.SS.max[d] = 600;
                 pb.SS.q.q[d] = 0;
-
             }
             pb.epsilon = 0.01;    //0.01 Acceptable error
             pb.objective = -180;       // Objective value
             pb.evalMax = pb.SS.D * 10000;
-
             break;
 
-
         case 106:// CEC 2005 F8 Ackley (NON rotated)
-            pb.SS.D = 10; // 10;
+            pb.SS.D = 30; // Changed from 10 to 30
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -32;
                 pb.SS.max[d] = 32;
@@ -122,7 +115,6 @@ struct problem problemDef(int functionCode) {
             pb.epsilon = 0.0001;    //.0001 Acceptable error
             pb.objective = -140;       // Objective value
             pb.evalMax = pb.SS.D * 10000;
-
             break;
 
         case 1:        // Griewank

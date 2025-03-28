@@ -48,17 +48,27 @@ FILE *f_trace = NULL;
 int create_directory(const char *path) {
     struct stat st = {0};
     if (stat(path, &st) == -1) {
-        #ifdef _WIN32
+#ifdef _WIN32
         return mkdir(path);
-        #else
+#else
         return mkdir(path, 0755);
-        #endif
+#endif
     }
     return 0;
 }
 
+// Safe fopen wrapper
+FILE* safe_fopen(const char *path, const char *mode) {
+    FILE *file = fopen(path, mode);
+    if (!file) {
+        fprintf(stderr, "Error: Unable to open file %s: %s\n", path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    return file;
+}
+
 // Function to get integer argument
-int getIntArg(char* argv[], int* i, int argc, const char* flag) {
+int getIntArg(char *argv[], int *i, int argc, const char *flag) {
     if (*i + 1 >= argc) {
         fprintf(stderr, "Missing integer argument for %s\n", flag);
         exit(EXIT_FAILURE);
@@ -68,7 +78,7 @@ int getIntArg(char* argv[], int* i, int argc, const char* flag) {
 }
 
 // Function to get double argument
-double getDoubleArg(char* argv[], int* i, int argc, const char* flag) {
+double getDoubleArg(char *argv[], int *i, int argc, const char *flag) {
     if (*i + 1 >= argc) {
         fprintf(stderr, "Missing double argument for %s\n", flag);
         exit(EXIT_FAILURE);
@@ -78,7 +88,7 @@ double getDoubleArg(char* argv[], int* i, int argc, const char* flag) {
 }
 
 // =================================================
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     struct position bestBest; // Best position over all runs
     int d;            // Current dimension
     double D;
@@ -114,12 +124,11 @@ int main(int argc, char** argv) {
     float z;
     double zz;
 
-
+    // Initialize default values
     int runMax = 1;
     double Smean = 40;
     int nbFunc = 1;
     int seed = 1294404794; // Default seed
-    const int MAX_FUNC = 13;
 
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -129,7 +138,7 @@ int main(int argc, char** argv) {
             Smean = getDoubleArg(argv, &i, argc, "-S");
         } else if (strcmp(argv[i], "-f") == 0) {
             nbFunc = getIntArg(argv, &i, argc, "-f");
-            if (nbFunc > MAX_FUNC) {
+            if (nbFunc > funcMax) {
                 fprintf(stderr, "Exceeded maximum number of functions.\n");
                 exit(EXIT_FAILURE);
             }
@@ -153,21 +162,15 @@ int main(int argc, char** argv) {
         printf("\nWARNING: Could not get current working directory");
         strcpy(cwd, ".");
     }
-    
+
     // Set base directory for results
-    sprintf(base_dir, "%s/../results", cwd);
-    
+    sprintf(base_dir, "%s/results", cwd);
+
     // Create main results directory
     printf("\nCreating results directory: '%s'", base_dir);
     if (create_directory(base_dir) != 0) {
         printf("\nWARNING: Could not create directory '%s': %s", base_dir, strerror(errno));
     }
-
-    // Close any open files from previous runs
-    if (f_run) { fclose(f_run); f_run = NULL; }
-    if (f_synth) { fclose(f_synth); f_synth = NULL; }
-    if (f_trace) { fclose(f_trace); f_trace = NULL; }
-    if (f_summary) { fclose(f_summary); f_summary = NULL; }
 
     //------------------------------------------------ PARAMETERS
     // Bells and Whistles
@@ -267,23 +270,21 @@ int main(int argc, char** argv) {
     }
     // ----------------------------------------------- PROBLEM
     param.trace = 1; // If >0 more information is displayed/saved (f_trace.txt)
-    
+
     // Functions to optimise
-    if (argc < 2) {
-        func[0] = 4; // 4
-        func[1] = 11;  // 11
-        func[2] = 15;  // 15
-        func[3] = 17;  // 17
-        func[4] = 18; // 18
-        func[5] = 20;
-        func[6] = 21;
-        func[7] = 100;
-        func[8] = 102;
-        func[9] = 103;
-        func[10] = 104;
-        func[11] = 105;
-        func[12] = 106;
-    }
+    func[0] = 4; // 4
+    func[1] = 11;  // 11
+    func[2] = 15;  // 15
+    func[3] = 17;  // 17
+    func[4] = 18; // 18
+    func[5] = 20;
+    func[6] = 21;
+    func[7] = 100;
+    func[8] = 102;
+    func[9] = 103;
+    func[10] = 104;
+    func[11] = 105;
+    func[12] = 106;
 
     /* (see problemDef( ) for precise definitions)
         -1  Constant. For test of biases
@@ -331,7 +332,13 @@ int main(int argc, char** argv) {
  
 
 */
-    
+
+    // Variables for overall summary
+    double overallSuccess[funcMax] = {0};
+    double overallAvgError[funcMax] = {0};
+    double overallAvgIterations[funcMax] = {0};
+    double overallAvgEvaluations[funcMax] = {0};
+
     if (runMax > R_max) {
         runMax = R_max;
         printf("\nWARNING. I can perform only %i runs. See R_max in main.h", R_max);
@@ -349,37 +356,49 @@ int main(int argc, char** argv) {
         }
 
         // Close any previously open files
-        if (f_run) { fclose(f_run); f_run = NULL; }
-        if (f_synth) { fclose(f_synth); f_synth = NULL; }
-        if (f_trace) { fclose(f_trace); f_trace = NULL; }
-        if (f_summary) { fclose(f_summary); f_summary = NULL; }
+        if (f_run) {
+            fclose(f_run);
+            f_run = NULL;
+        }
+        if (f_synth) {
+            fclose(f_synth);
+            f_synth = NULL;
+        }
+        if (f_trace) {
+            fclose(f_trace);
+            f_trace = NULL;
+        }
+        if (f_summary) {
+            fclose(f_summary);
+            f_summary = NULL;
+        }
 
         // Create function-specific output files
         sprintf(file_path, "%s/f_run_seed%d.txt", func_dir, seed);
         printf("\nOpening run file: '%s'", file_path);
-        f_run = fopen(file_path, "w");
+        f_run = safe_fopen(file_path, "w");
         if (!f_run) {
             printf("\nWARNING: Could not create file %s: %s", file_path, strerror(errno));
         }
-        
+
         sprintf(file_path, "%s/f_synth_seed%d.txt", func_dir, seed);
         printf("\nOpening synth file: '%s'", file_path);
-        f_synth = fopen(file_path, "w");
+        f_synth = safe_fopen(file_path, "w");
         if (!f_synth) {
             printf("\nWARNING: Could not create file %s: %s", file_path, strerror(errno));
         }
-        
+
         sprintf(file_path, "%s/f_trace_seed%d.txt", func_dir, seed);
         printf("\nOpening trace file: '%s'", file_path);
-        f_trace = fopen(file_path, "w");
+        f_trace = safe_fopen(file_path, "w");
         if (!f_trace) {
             printf("\nWARNING: Could not create file %s: %s", file_path, strerror(errno));
         }
-        
+
         // Create summary file for all console output
         sprintf(file_path, "%s/summary_seed%d.txt", func_dir, seed);
         printf("\nOpening summary file: '%s'", file_path);
-        f_summary = fopen(file_path, "w");
+        f_summary = safe_fopen(file_path, "w");
         if (!f_summary) {
             printf("\nWARNING: Could not create file %s: %s", file_path, strerror(errno));
         }
@@ -473,7 +492,7 @@ int main(int argc, char** argv) {
 
             printf("\n Swarm size %i", param.S);
             if (f_summary) fprintf(f_summary, "\n Swarm size %i", param.S);
-            
+
             result = PSO(param, pb);
             error = result.error;
 
@@ -491,7 +510,7 @@ int main(int argc, char** argv) {
             if (run == 0) {
                 bestBest = result.SW.P[result.SW.best];
             }
-            // Memorize the best (useful if more than one run)
+                // Memorize the best (useful if more than one run)
             else if (error < bestBest.f) {
                 bestBest = result.SW.P[result.SW.best];
             }
@@ -530,7 +549,7 @@ int main(int argc, char** argv) {
 
             evalMean = evalMean + result.nEval;
             errorMeanBest[run] = error;
-            
+
             // Safely handle log calculation for error values
             if (error > 0) {
                 logProgressMean = logProgressMean - log(error);
@@ -572,13 +591,13 @@ int main(int argc, char** argv) {
         successRate = 100 * (1 - nFailure / (double) runMax);
         printf("Success rate = %.2f%%", successRate);
         if (f_summary) fprintf(f_summary, "Success rate = %.2f%%", successRate);
-        
+
         success[indFunc] = successRate;
 
         printf("\n Best min value = %1.20e", errorMin);
         printf("\nPosition of the optimum: ");
         for (d = 0; d < pb.SS.D; d++) printf(" %.20f", bestBest.x[d]);
-        
+
         if (f_summary) {
             fprintf(f_summary, "\n Best min value = %1.20e", errorMin);
             fprintf(f_summary, "\nPosition of the optimum: ");
@@ -628,11 +647,11 @@ int main(int argc, char** argv) {
             }
 
             fprintf(f_summary, "\n BW = (%i, %i, %i, %i)", param.BW[0], param.BW[1],
-                param.BW[2], param.BW[3]);
+                    param.BW[2], param.BW[3]);
             fprintf(f_summary, "\n Swarm size: ");
-            if (param.BW[0] == 0) 
-                fprintf(f_summary, "%i", (int) Smean); 
-            else 
+            if (param.BW[0] == 0)
+                fprintf(f_summary, "%i", (int) Smean);
+            else
                 fprintf(f_summary, " mean %i", (int) Smean);
             fprintf(f_summary, "\n K = %i", param.K);
             fprintf(f_summary, "\n w = %f", param.w);
@@ -641,6 +660,11 @@ int main(int argc, char** argv) {
         } else {
             printf("\nWARNING: Could not write to summary file (NULL pointer)");
         }
+
+        // Accumulate data for overall summary
+        overallSuccess[indFunc] = successRate;
+        overallAvgError[indFunc] = errorMean;
+        overallAvgEvaluations[indFunc] = evalMean;
 
         // Close all files for this function
         printf("\nClosing output files for function %d", functionCode);
@@ -662,6 +686,26 @@ int main(int argc, char** argv) {
         }
 
     } // End "for ind[..."
+
+    FILE *f_overall_summary = NULL;
+    char overall_summary_path[512];
+
+    sprintf(overall_summary_path, "%s/overall_summary_seed%d.txt", base_dir, seed);
+    f_overall_summary = safe_fopen(overall_summary_path, "w");
+
+    fprintf(f_overall_summary, "Overall Summary:\n");
+    fprintf(f_overall_summary, "%-10s %-15s %-15s %-15s\n",
+            "Function", "Success (%)", "Avg. Error", "Avg. Evaluations");
+
+    for (indFunc = 0; indFunc < nbFunc; indFunc++) {
+        fprintf(f_overall_summary, "f%-9d %-15.2f %-15e %-15.2f\n",
+                func[indFunc],
+                overallSuccess[indFunc],
+                overallAvgError[indFunc],
+                overallAvgEvaluations[indFunc]);
+    }
+
+    fclose(f_overall_summary);
 
     printf("\n errMax : %f", errMax);
 

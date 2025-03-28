@@ -8,27 +8,19 @@ mkdir -p "$SCRIPT_DIR/results"
 
 # Function to run a test
 run_test() {
-    local func=$1
-    local runs=$2
-    local seed=$3
-    local func_dir="$SCRIPT_DIR/results/f${func}"
+    local runs=$1
+    local seed=$2
     
-    # Create function directory if it doesn't exist
-    mkdir -p "$func_dir"
     
-    echo "Running function $func with $runs runs and seed $seed..."
+    echo "Running with $runs runs and seed $seed..."
     
     # Run the PSO program with appropriate arguments
-    "$SCRIPT_DIR/build/standard_pso" -R $runs -S 40 -f $func -sd $seed
-    
-    echo "Results saved to $func_dir"
+    "$SCRIPT_DIR/build/standard_pso" -f 13 -R $runs -S 40 -sd $seed
 }
 
 # Run all test functions with 100 runs and different seeds
 for seed in 1294404794 1234567890; do
-    for func in 4 11 15 17 18 20 21 100 102 103 104 105 106; do
-        run_test $func 100 $seed
-    done
+    run_test 100 $seed
 done
 
 echo "All tests completed. Results are in the results directory." 
