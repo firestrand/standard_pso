@@ -68,7 +68,6 @@ struct result PSO(struct param param, struct problem pb) {
 
         case 1:
         case 2:
-        case 5:
             qRand = quasiRand(pb.SS.D, R.SW.S, randCase);
 
             for (s = 0; s < R.SW.S; s++) {
@@ -135,17 +134,6 @@ struct result PSO(struct param param, struct problem pb) {
 
     while (noStop == 0) {
         iter = iter + 1;
-/*
-// Display the swarm		
-	printf("\n Positions (%i) \ Velocities (%i) after iter %i.",pb.SS.D,pb.SS.D, iter-1 );
-	for (s = 0; s < R.SW.S; s++) 
-	{
-	printf("\n");
-	for ( d = 0; d < pb.SS.D; d++ ) printf( " %f", R.SW.X[s].x[d] );
-	printf("\ ");
-	for ( d = 0; d < pb.SS.D; d++ ) printf( " %f", R.SW.V[s].v[d] );
-	}
-*/
 
         switch (param.BW[3]) {
             default:
@@ -195,17 +183,6 @@ struct result PSO(struct param param, struct problem pb) {
                     break;
             }
         }
-/*
-	// Display the links
-	for(s=0;s<R.SW.S;s++)
-	{
-		printf("\n");
-		for(m=0;m<R.SW.S;m++)
-		{
-		printf("%i ",LINKS[s][m]);		
-		}
-	}	
-*/
 
         // Loop on particles
         for (s0 = 0; s0 < R.SW.S; s0++)    // For each particle ...
@@ -333,25 +310,18 @@ struct result PSO(struct param param, struct problem pb) {
                 V1.v[d] = Gr.x[d] - R.SW.X[s].x[d]; // Vector X-G
             }
 
-            // Random point around
-            switch (param.BW[1]) {
-                default:
-                    rad = distanceL(R.SW.X[s], Gr, 2);
-                    break;
-                case 3:
-                    rad = (param.c - 1) * distanceL(R.SW.X[s], R.SW.P[s], 2);
-                    break;
-            }
+            // Calculate radius for hypersphere
+            rad = distanceL(R.SW.X[s], Gr, 2);  // Euclidean distance
 
+            // Get random point in hypersphere H(G,||G-x||)
             V2 = alea_sphere(pb.SS.D, rad, param.distrib, param.mean, param.sigma, randCase);
 
-            // New "velocity"
+            // Update velocity: v = w*v + (H(G) - x)
             for (d = 0; d < pb.SS.D; d++) {
                 R.SW.V[s].v[d] = R.SW.V[s].v[d] + V1.v[d] + V2.v[d]; // New "velocity"
             }
 
-            // New position
-
+            // Update position
             for (d = 0; d < pb.SS.D; d++) {
                 R.SW.X[s].x[d] = R.SW.X[s].x[d] + R.SW.V[s].v[d];
             }

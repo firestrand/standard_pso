@@ -3,6 +3,9 @@ Standard PSO 2011
 Contact for remarks, suggestions etc.: pso@writeme.com
 
 Updates:
+2025-03-28  Refactored code to run on modern CMake using CMakeLists.txt. Modified output
+            to write to a results directory. Created a build.sh and run_tests.sh. Added a
+			markdown version of results.
 2012-01-06  BW[2] is now for randomness options. In particular, one can use
 						quasi-random numbers for initialisation (Sobol or Halton sequences)
 						Halton sequences seem to be better.
@@ -49,6 +52,7 @@ Note 2: the code is not optimised, in order to be more readable.
  Miranda, Vladimiro
  Poli, Riccardo
  Serra, Pablo
+ Silvers, Travis
  Spears, William
  Stickel, Manfred
  Yue,Shuai

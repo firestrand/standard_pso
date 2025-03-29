@@ -129,6 +129,7 @@ int main(int argc, char **argv) {
     double Smean = 40;
     int nbFunc = 1;
     int seed = 1294404794; // Default seed
+    int functionToRun = -1;  // Default value to indicate no specific function
 
     // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -137,11 +138,8 @@ int main(int argc, char **argv) {
         } else if (strcmp(argv[i], "-S") == 0) {
             Smean = getDoubleArg(argv, &i, argc, "-S");
         } else if (strcmp(argv[i], "-f") == 0) {
-            nbFunc = getIntArg(argv, &i, argc, "-f");
-            if (nbFunc > funcMax) {
-                fprintf(stderr, "Exceeded maximum number of functions.\n");
-                exit(EXIT_FAILURE);
-            }
+            functionToRun = getIntArg(argv, &i, argc, "-f");
+            nbFunc = 1;  // We'll only run one function
         } else if (strcmp(argv[i], "-sd") == 0) {
             seed = getIntArg(argv, &i, argc, "-sd");
         } else {
@@ -188,7 +186,7 @@ int main(int argc, char **argv) {
     //  3 => when P=G, just look around
     // 4 =>  different weights for X, P, G  (TEST)
 
-    param.BW[2] = 6;    // Randomness options
+    param.BW[2] = 10;    // Randomness options
     // -2nn => Truncated KISS (simulated).
     //			nn is the number of bits you use to define
     //			each random number/ Example: -207 for 7 bits
@@ -207,7 +205,7 @@ int main(int argc, char **argv) {
     //      Warning: nn must be >=2
     // 4 => Read on a list (f_rand_quasi.txt)
     // 5 => quasi-random Rd and wyRand random numbers
-    // 5 => wyRand random numbers
+    // 6 => wyRand random numbers
     f_rand_bin = fopen("f_rand_bin.txt", "r"); // A sequence of bits, if BW[2]=3
     f_rand = fopen("Ltest.txt", "r"); //A list of real numbers in ]0,1], if BW[2]=4
 
@@ -271,21 +269,6 @@ int main(int argc, char **argv) {
     // ----------------------------------------------- PROBLEM
     param.trace = 1; // If >0 more information is displayed/saved (f_trace.txt)
 
-    // Functions to optimise
-    func[0] = 4; // 4
-    func[1] = 11;  // 11
-    func[2] = 15;  // 15
-    func[3] = 17;  // 17
-    func[4] = 18; // 18
-    func[5] = 20;
-    func[6] = 21;
-    func[7] = 100;
-    func[8] = 102;
-    func[9] = 103;
-    func[10] = 104;
-    func[11] = 105;
-    func[12] = 106;
-
     /* (see problemDef( ) for precise definitions)
         -1  Constant. For test of biases
     0 Parabola (Sphere)
@@ -329,9 +312,15 @@ int main(int argc, char **argv) {
     107 F4 Schwefel + noise
 
     999 for tests
- 
-
-*/
+    */
+   
+    // Initialize function array with the single function to run
+    if (functionToRun != -1) {
+        func[0] = functionToRun;
+    } else {
+        // Default function if none specified
+        func[0] = 4;  // Tripod
+    }
 
     // Variables for overall summary
     double overallSuccess[funcMax] = {0};
@@ -479,15 +468,17 @@ int main(int argc, char **argv) {
             case 6:
                 break;
         }
-//nCycle=4; 
+        //nCycle=4;
         for (run = 0; run < runMax; run++) {
-            if (param.BW[0] == 0) param.S = Smean; // Constant swarm size
-            else // Random swarm size "around" the mean value
+            if (param.BW[0] == 0) {
+                param.S = Smean; // Constant swarm size
+            } else { // Random swarm size "around" the mean value
                 param.S = (int) (0.5 *
                                  (0.5 + alea(Smean - D / 2, Smean + D / 2, 0) + alea(Smean - D / 2, Smean + D / 2, 0)));
+            }
 
             param.p = 1. - pow(1. - 1. / param.S, param.K);
-//printf("\n p %f",param.p);      
+			//printf("\n p %f",param.p);      
             // (for a "global best" PSO, directly set param.p=1)
 
             printf("\n Swarm size %i", param.S);
@@ -500,10 +491,11 @@ int main(int argc, char **argv) {
                 nFailure = nFailure + 1;
 
             if (pb.SS.normalise > 0) {
-                for (d = 0; d < pb.SS.D; d++)
+                for (d = 0; d < pb.SS.D; d++) {
                     result.SW.P[result.SW.best].x[d] =
                             pb.SS.min[d] + (pb.SS.max[d] - pb.SS.min[d]) * result.SW.P[result.SW.best].x[d]
                                            / pb.SS.normalise;
+                }
             }
 
             // Initialize bestBest on first run

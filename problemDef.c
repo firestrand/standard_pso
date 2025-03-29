@@ -106,7 +106,7 @@ struct problem problemDef(int functionCode) {
             break;
 
         case 106:// CEC 2005 F8 Ackley (NON rotated)
-            pb.SS.D = 30; // Changed from 10 to 30
+            pb.SS.D = 10; // Default to 10D for CEC 2005 problems
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -32;
                 pb.SS.max[d] = 32;
