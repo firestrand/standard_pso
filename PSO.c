@@ -53,7 +53,6 @@ struct result PSO(struct param param, struct problem pb) {
     switch (randCase) {
         default:
             for (s = 0; s < R.SW.S; s++) {
-
                 for (d = 0; d < pb.SS.D; d++) {
                     if (pb.SS.normalise == 0) {
                         xMin = pb.SS.min[d];
@@ -98,7 +97,7 @@ struct result PSO(struct param param, struct problem pb) {
         R.SW.P[s] = R.SW.X[s];    // Best position = current one
     }
 
-//
+    //
     // If the number max of evaluations is smaller than
     // the swarm size, just keep evalMax particles, and finish
     if (R.SW.S > pb.evalMax) R.SW.S = pb.evalMax;
@@ -118,9 +117,9 @@ struct result PSO(struct param param, struct problem pb) {
     }
 
     // Display the best
-//	printf( "\nBest value after init. %1.20e ", errorPrev ); printf(" ");
-//		printf( "\n Position :\n" );
-//		for ( d = 0; d < pb.SS.D; d++ ) printf( " %f", R.SW.P[R.SW.best].x[d] );
+    //	printf( "\nBest value after init. %1.20e ", errorPrev ); printf(" ");
+    //		printf( "\n Position :\n" );
+    //		for ( d = 0; d < pb.SS.D; d++ ) printf( " %f", R.SW.P[R.SW.best].x[d] );
 
     // ---------------------------------------------- ITERATIONS
     noStop = 0;
@@ -221,7 +220,7 @@ struct result PSO(struct param param, struct problem pb) {
             } else // this is the best particle. Define another random "previous best"
                 // May be used or not, though (see below)
             {
-//	if(param.BW[1]==1) // WARNING: un-comment this line largely modify the performances
+                //	if(param.BW[1]==1) // WARNING: un-comment this line largely modify the performances
                 // of list-based option BW[2]=4. Not the same lists are valid
                 {
                     s1:
@@ -316,12 +315,12 @@ struct result PSO(struct param param, struct problem pb) {
             // Get random point in hypersphere H(G,||G-x||)
             V2 = alea_sphere(pb.SS.D, rad, param.distrib, param.mean, param.sigma, randCase);
 
-            // Update velocity: v = w*v + (H(G) - x)
+            // New "velocity"
             for (d = 0; d < pb.SS.D; d++) {
                 R.SW.V[s].v[d] = R.SW.V[s].v[d] + V1.v[d] + V2.v[d]; // New "velocity"
             }
 
-            // Update position
+            // New position
             for (d = 0; d < pb.SS.D; d++) {
                 R.SW.X[s].x[d] = R.SW.X[s].x[d] + R.SW.V[s].v[d];
             }

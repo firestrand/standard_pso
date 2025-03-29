@@ -21,13 +21,87 @@ double perf(struct position x, int function, struct SS SS,
     double y1, y2;
     double z;
 
-#include "cec2005data.c"
+    // Shifted Parabola/Sphere (CEC 2005 benchmark)
+    static double offset_0[30] =
+            {
+                    -3.9311900e+001, 5.8899900e+001, -4.6322400e+001, -7.4651500e+001, -1.6799700e+001,
+                    -8.0544100e+001, -1.0593500e+001, 2.4969400e+001, 8.9838400e+001, 9.1119000e+000,
+                    -1.0744300e+001, -2.7855800e+001, -1.2580600e+001, 7.5930000e+000, 7.4812700e+001,
+                    6.8495900e+001, -5.3429300e+001, 7.8854400e+001, -6.8595700e+001, 6.3743200e+001,
+                    3.1347000e+001, -3.7501600e+001, 3.3892900e+001, -8.8804500e+001, -7.8771900e+001,
+                    -6.6494400e+001, 4.4197200e+001, 1.8383600e+001, 2.6521200e+001, 8.4472300e+001
+            };
+    // Shifted Rosenbrock (CEC 2005 benchmark)
+    static double offset_2[30] =
+            {
+                    8.1023200e+001, -4.8395000e+001, 1.9231600e+001, -2.5231000e+000, 7.0433800e+001,
+                    4.7177400e+001, -7.8358000e+000, -8.6669300e+001, 5.7853200e+001, -9.9533000e+000,
+                    2.0777800e+001, 5.2548600e+001, 7.5926300e+001, 4.2877300e+001, -5.8272000e+001,
+                    -1.6972800e+001, 7.8384500e+001, 7.5042700e+001, -1.6151300e+001, 7.0856900e+001,
+                    -7.9579500e+001, -2.6483700e+001, 5.6369900e+001, -8.8224900e+001, -6.4999600e+001,
+                    -5.3502200e+001, -5.4230000e+001, 1.8682600e+001, -4.1006100e+001, -5.4213400e+001
+            };
+    // Shifted Rastrigin (CEC 2005)
+    static double offset_3[30] =
+            {
+                    1.9005000e+000, -1.5644000e+000, -9.7880000e-001, -2.2536000e+000, 2.4990000e+000,
+                    -3.2853000e+000, 9.7590000e-001, -3.6661000e+000, 9.8500000e-002, -3.2465000e+000,
+                    3.8060000e+000, -2.6834000e+000, -1.3701000e+000, 4.1821000e+000, 2.4856000e+000,
+                    -4.2237000e+000, 3.3653000e+000, 2.1532000e+000, -3.0929000e+000, 4.3105000e+000,
+                    -2.9861000e+000, 3.4936000e+000, -2.7289000e+000, -4.1266000e+000, -2.5900000e+000,
+                    1.3124000e+000, -1.7990000e+000, -1.1890000e+000, -1.0530000e-001, -3.1074000e+000
+            };
+
+    // Shifted Schwefel (F2 CEC 2005. Also for F4)
+    static double offset_4[30] =
+            {
+                    3.5626700e+001, -8.2912300e+001, -1.0642300e+001, -8.3581500e+001, 8.3155200e+001,
+                    4.7048000e+001, -8.9435900e+001, -2.7421900e+001, 7.6144800e+001, -3.9059500e+001,
+                    4.8885700e+001, -3.9828000e+000, -7.1924300e+001, 6.4194700e+001, -4.7733800e+001,
+                    -5.9896000e+000, -2.6282800e+001, -5.9181100e+001, 1.4602800e+001, -8.5478000e+001,
+                    -5.0490100e+001, 9.2400000e-001, 3.2397800e+001, 3.0238800e+001, -8.5094900e+001,
+                    6.0119700e+001, -3.6218300e+001, -8.5883000e+000, -5.1971000e+000, 8.1553100e+001
+            };
+
+    // Shifted Griewank (CEC 2005)
+    static double offset_5[30] =
+            {
+                    -2.7626840e+002, -1.1911000e+001, -5.7878840e+002, -2.8764860e+002, -8.4385800e+001,
+                    -2.2867530e+002, -4.5815160e+002, -2.0221450e+002, -1.0586420e+002, -9.6489800e+001,
+                    -3.9574680e+002, -5.7294980e+002, -2.7036410e+002, -5.6685430e+002, -1.5242040e+002,
+                    -5.8838190e+002, -2.8288920e+002, -4.8888650e+002, -3.4698170e+002, -4.5304470e+002,
+                    -5.0658570e+002, -4.7599870e+002, -3.6204920e+002, -2.3323670e+002, -4.9198640e+002,
+                    -5.4408980e+002, -7.3445600e+001, -5.2690110e+002, -5.0225610e+002, -5.3723530e+002
+            };
+
+    // Shifted Ackley (CEC 2005)
+    static double offset_6[30] =
+            {
+                    -1.6823000e+001, 1.4976900e+001, 6.1690000e+000, 9.5566000e+000, 1.9541700e+001,
+                    -1.7190000e+001, -1.8824800e+001, 8.5110000e-001, -1.5116200e+001, 1.0793400e+001,
+                    7.4091000e+000, 8.6171000e+000, -1.6564100e+001, -6.6800000e+000, 1.4543300e+001,
+                    7.0454000e+000, -1.8621500e+001, 1.4556100e+001, -1.1594200e+001, -1.9153100e+001,
+                    -4.7372000e+000, 9.2590000e-001, 1.3241200e+001, -5.2947000e+000, 1.8416000e+000,
+                    4.5618000e+000, -1.8890500e+001, 9.8008000e+000, -1.5426500e+001, 1.2722000e+000
+            };
+
+
 
     //--------- Test
     struct problem pb;
     struct param param;
 
     // See function 11 (Network)
+/*
+	 static float bts[5][2]=
+	 {
+		 {6.8, 9.0},
+		 {8.3, 7.9},
+		 {6.6, 5.6},
+		 {10, 5.4},
+		 {8, 3} 
+	 };
+*/
     static float bts[19][2] =
             {
                     {6,  9},
@@ -63,10 +137,6 @@ double perf(struct position x, int function, struct SS SS,
     } else xs = x;
 
     switch (function) {
-        default:
-        case -1:        // Constant. For test of biases
-            f = 0;
-            break;
         case 100: // Parabola (Sphere) CEC 2005
             f = -450;
             for (d = 0; d < xs.size; d++) {
@@ -94,6 +164,68 @@ double perf(struct position x, int function, struct SS SS,
             //f=log(1+f);
             break;
 
+        case 103: // Rastrigin
+            for (d = 0; d < xs.size; d++) {
+                xs.x[d] = xs.x[d] - offset_3[d];
+            }
+            f = -330;
+            k = 10;
+
+            for (d = 0; d < xs.size; d++) {
+                xd = xs.x[d];
+                f = f + xd * xd - k * cos(2 * pi * xd);
+            }
+            f = f + xs.size * k;
+            break;
+
+        case 104: // Schwefel (F2)
+        case 107: // Schwefel + noise (F4)
+            for (d = 0; d < xs.size; d++) {
+                xs.x[d] = xs.x[d] - offset_4[d];
+            }
+
+            f = 0;
+            for (d = 0; d < xs.size; d++) {
+                sum2 = 0.0;
+                for (k = 0; k <= d; k++) {
+                    sum2 += xs.x[k];
+                }
+                f += sum2 * sum2;
+            }
+            if (function == 107) f = f * (1 + 0.4 * fabs(alea_normal(0, 1, 10)));
+            f = f - 450;
+            break;
+
+        case 105: // Griewank. WARNING: in the CEC 2005 benchmark it is rotated
+            sum1 = 0.0;
+            sum2 = 1.0;
+            f = -180;
+            for (d = 0; d < xs.size; d++) {
+                xd = xs.x[d] - offset_5[d];
+                sum1 += xd * xd;
+                sum2 *= cos(xd / sqrt(1.0 + d));
+            }
+            f = f + 1.0 + sum1 / 4000.0 - sum2;
+            break;
+
+        case 106: // Ackley
+            f = -140;
+
+            sum1 = 0.0;
+            sum2 = 0.0;
+            for (d = 0; d < xs.size; d++) {
+                xd = xs.x[d] - offset_6[d];
+                sum1 += xd * xd;
+                sum2 += cos(2.0 * pi * xd);
+            }
+            sum1 = -0.2 * sqrt(sum1 / xs.size);
+            sum2 /= xs.size;
+            f = f + 20.0 + E - 20.0 * exp(sum1) - exp(sum2);
+            break;
+
+        case -1:        // Constant. For test of biases
+            f = 0;
+            break;
 
         case 0:        // Parabola (Sphere)
             f = 0;
@@ -331,7 +463,40 @@ double perf(struct position x, int function, struct SS SS,
             break;
 
         case 21: // Coil compression spring  (penalty method)
-            f = coil_compression_spring(xs);
+            // Ref New Optim. Tech. in Eng. p 644
+
+            x1 = xs.x[0]; // {1,2, ... 70}
+            x2 = xs.x[1];//[0.6, 3]
+            x3 = xs.x[2];// relaxed form [0.207,0.5]  dx=0.001
+            // In the original problem, it is a list of
+            // acceptable values
+            // {0.207,0.225,0.244,0.263,0.283,0.307,0.331,0.362,0.394,0.4375,0.5}
+
+            f = pi * pi * x2 * x3 * x3 * (x1 + 2) * 0.25;
+            //	f=x2*x3*x3*(x1+2);
+            // Constraints
+            ff = constraint(xs, function);
+
+            if (ff.f[1] > 0) {
+                c = 1 + ff.f[1];
+                f = f * c * c * c;
+            }
+            if (ff.f[2] > 0) {
+                c = 1 + ff.f[2];
+                f = f * c * c * c;
+            }
+            if (ff.f[3] > 0) {
+                c = 1 + ff.f[3];
+                f = f * c * c * c;
+            }
+            if (ff.f[4] > 0) {
+                c = 1 + pow(10, 10) * ff.f[4];
+                f = f * c * c * c;
+            }
+            if (ff.f[5] > 0) {
+                c = 1 + pow(10, 10) * ff.f[5];
+                f = f * c * c * c;
+            }
             break;
 
         case 22: //Cellular phone
@@ -371,13 +536,10 @@ double perf(struct position x, int function, struct SS SS,
                     // At this point, the maximum field generated is z
                     // If it is smaller than in previous checked points, keep it
                     if (z < f) f = z;
-
                 }
-
             }
             // We want it as high as possible
             f = 1. / f; // In order to have something to minimise
-
             break;
 
         case 23: // Penalized
@@ -410,7 +572,6 @@ double perf(struct position x, int function, struct SS SS,
             u = 0.5 * (n - 1); //1./100; // For the repulsive action of the boundaries
             // The smaller u, the nearer to the boundaries can be some points
 
-
             f = 0; // Total repulsive force to minimise
             for (i = 0; i < n; i++) // For each charged point ...
             {
@@ -436,6 +597,7 @@ double perf(struct position x, int function, struct SS SS,
 
         case 25: // Pressure vessel (penalty method)
         case 1025: // confinement method
+
             // Ref New Optim. Tech. in Eng. p 638
             // D = 4
 
@@ -462,6 +624,7 @@ double perf(struct position x, int function, struct SS SS,
                 c = 1 + ff.f[3];
                 f = f * c * c;
             }
+
             break;
 
         case 26: // Ellipsoidal
@@ -529,7 +692,6 @@ double perf(struct position x, int function, struct SS SS,
             f = 4 * x1 * x1 - 2.1 * pow(x1, 4) + pow(x1, 6) / 3 + x1 * x2 - 4 * x2 * x2 + 4 * pow(x2, 4);
 
             break;
-
             // Periodic
             x1 = xs.x[0];
             x2 = xs.x[1];
@@ -551,10 +713,10 @@ double perf(struct position x, int function, struct SS SS,
             pb.evalMax = 100;     // 10000
             pb.epsilon = 0.0001;
             pb.objective = 0;
-
+            //--
             param.BW[0] = 0;
             param.BW[1] = 0;
-            //param.BW[2] = 4;
+            param.BW[2] = 4;
             param.BW[3] = 0;
             param.confin = 0;
             param.distrib = 0;
@@ -584,51 +746,6 @@ double perf(struct position x, int function, struct SS SS,
             }
             f = 1. / f; // Minimise the inverse of the success rate
 
-            break;
-
-        case 103:// CEC 2005 F9, Rastrigin
-            f = -330;  // Initialize with objective value
-            for (d = 0; d < xs.size; d++) {
-                xd = xs.x[d] - offset_3[d];  // Apply shift vector
-                f = f + (xd * xd - 10 * cos(2 * pi * xd) + 10);
-            }
-            break;
-
-        case 104:// CEC 2005 F2  Schwefel
-            f = -450;  // Initialize with objective value
-            for (d = 0; d < xs.size; d++) {
-                xd = xs.x[d] - offset_4[d];  // Apply shift vector
-                sum1 = 0;
-                for (k = 0; k <= d; k++) {
-                    sum1 += xd;
-                }
-                f = f + sum1 * sum1;
-            }
-            break;
-
-        case 105:// CEC 2005 F7  Griewank (NON rotated)
-            f = -180;  // Initialize with objective value
-            sum1 = 0;
-            p = 1;
-            for (d = 0; d < xs.size; d++) {
-                xd = xs.x[d] - offset_5[d];  // Apply shift vector
-                sum1 = sum1 + (xd * xd / 4000.0);
-                p = p * cos(xd / sqrt((double)(d + 1)));
-            }
-            f = f + sum1 - p + 1;
-            break;
-
-        case 106:// CEC 2005 F8 Ackley (NON rotated)
-            f = -140;  // Initialize with objective value
-            sum1 = 0;
-            sum2 = 0;
-            for (d = 0; d < xs.size; d++) {
-                xd = xs.x[d] - offset_6[d];  // Apply shift vector
-                sum1 += xd * xd;
-                sum2 += cos(2 * pi * xd);
-            }
-            f = f - 20 * exp(-0.2 * sqrt(sum1/xs.size)) 
-                  - exp(sum2/xs.size) + 20 + E;
             break;
 
     }
@@ -679,6 +796,5 @@ struct fitness constraint(struct position x, int functCode) {
             break;
 
     }
-
     return ff;
 }

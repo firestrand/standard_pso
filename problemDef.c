@@ -82,7 +82,7 @@ struct problem problemDef(int functionCode) {
 
         case 104:// CEC 2005 F2  Schwefel
         case 107: // F4 Schwefel + noise
-            pb.SS.D = 30;  // Changed from 10 to 30
+            pb.SS.D = 10;
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -100;
                 pb.SS.max[d] = 100;
@@ -94,7 +94,7 @@ struct problem problemDef(int functionCode) {
             break;
 
         case 105:// CEC 2005 F7  Griewank (NON rotated)
-            pb.SS.D = 30;     // Changed from 10 to 30
+            pb.SS.D = 10;     // 10
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -600;
                 pb.SS.max[d] = 600;
@@ -106,7 +106,7 @@ struct problem problemDef(int functionCode) {
             break;
 
         case 106:// CEC 2005 F8 Ackley (NON rotated)
-            pb.SS.D = 10; // Default to 10D for CEC 2005 problems
+            pb.SS.D = 10; // 10;
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -32;
                 pb.SS.max[d] = 32;
@@ -570,7 +570,7 @@ struct problem problemDef(int functionCode) {
             break;
 
 
-// Goldstein & Price function
+            // Goldstein & Price function
             pb.SS.D = 2;
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -2;
@@ -585,7 +585,7 @@ struct problem problemDef(int functionCode) {
 
 
             break;
-// Six-Hump Camel Back
+            // Six-Hump Camel Back
             pb.SS.D = 2;
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -5;
@@ -597,7 +597,7 @@ struct problem problemDef(int functionCode) {
             pb.objective = -1.0316;
 
             break;
-// Periodic
+            // Periodic
             pb.SS.D = 2;
             for (d = 0; d < pb.SS.D; d++) {
                 pb.SS.min[d] = -10;
@@ -622,4 +622,36 @@ struct problem problemDef(int functionCode) {
     return pb;
 }
 
-#include "lennard_jones.c"
+double lennard_jones(struct position x) {
+    /*
+        This is for black-box optimisation. Therefore, we are not supposed to know
+        that there are some symmetries. That is why the dimension of the problem is
+        3*nb_of_atoms, as it could be 3*nb_of_atoms-6
+    */
+    int d;
+    int dim = 3;
+    double dist;
+    double f;
+    int i, j;
+    int nPoints = x.size / dim;
+    int alpha = 6;
+    struct position x1, x2;
+    double zz;
+
+    x1.size = dim;
+    x2.size = dim;
+
+    f = 0;
+    for (i = 0; i < nPoints - 1; i++) {
+        for (d = 0; d < dim; d++) x1.x[d] = x.x[3 * i + d];
+        for (j = i + 1; j < nPoints; j++) {
+            for (d = 0; d < dim; d++) x2.x[d] = x.x[3 * j + d];
+            dist = distanceL(x1, x2, 2);
+            if (dist < zero) zz = infinity;
+            else zz = pow(dist, -alpha);
+            f = f + zz * (zz - 1);
+        }
+    }
+    f = 4 * f;
+    return f;
+}
