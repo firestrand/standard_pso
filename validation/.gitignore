@@ -1,0 +1,17 @@
+# Build directory
+/build/
+
+# Object files
+*.o
+
+# Executables
+validate
+
+# Data files
+/data/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~ 
